@@ -20,6 +20,12 @@ func UserIDFromContext(ctx context.Context) (string, bool) {
 	return v, true
 }
 
+// WithUserID injects a userID into ctx, the same way the Auth middleware does.
+// Intended for use in handler tests that need an authenticated context.
+func WithUserID(ctx context.Context, userID string) context.Context {
+	return context.WithValue(ctx, userIDKey, userID)
+}
+
 // Auth returns a middleware that validates a Bearer JWT from the Authorization header
 // using HS256 + the given secret. On success it injects the `sub` claim as userID
 // into the request context (see UserIDFromContext). On failure it responds 401.

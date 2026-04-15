@@ -1,0 +1,216 @@
+package handler
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"net/http"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/ropehapi/wedding-mc/internal/domain"
+	"github.com/ropehapi/wedding-mc/internal/middleware"
+	"github.com/ropehapi/wedding-mc/internal/service"
+)
+
+// authServicer is the subset of service.AuthService used by AuthHandler.
+type authServicer interface {
+	Register(ctx context.Context, name, email, password string) (*domain.User, error)
+	Login(ctx context.Context, email, password string) (*service.LoginResult, error)
+	RefreshToken(ctx context.Context, refreshToken string) (*service.RefreshResult, error)
+	Logout(ctx context.Context, userID string) error
+}
+
+// AuthHandler handles HTTP requests for authentication endpoints.
+type AuthHandler struct {
+	svc      authServicer
+	validate *validator.Validate
+}
+
+// NewAuthHandler creates a new AuthHandler.
+func NewAuthHandler(svc authServicer) *AuthHandler {
+	return &AuthHandler{svc: svc, validate: validator.New()}
+}
+
+// --- Request / Response types ---
+
+type registerRequest struct {
+	Name     string `json:"name"     validate:"required"`
+	Email    string `json:"email"    validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8"`
+}
+
+type userResponse struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	CreatedAt string `json:"created_at"`
+}
+
+type loginRequest struct {
+	Email    string `json:"email"    validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}
+
+type loginResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresAt    string `json:"expires_at"`
+}
+
+type refreshRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+type refreshResponse struct {
+	AccessToken string `json:"access_token"`
+	ExpiresAt   string `json:"expires_at"`
+}
+
+// --- Handlers ---
+
+// Register godoc
+// @Summary Registrar casal
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param body body registerRequest true "Dados do casal"
+// @Success 201 {object} userResponse
+// @Failure 409 {object} errorEnvelope
+// @Failure 422 {object} validationEnvelope
+// @Router /v1/auth/register [post]
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	var req registerRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		Error(w, http.StatusBadRequest, "bad_request", "invalid JSON body")
+		return
+	}
+
+	if errs := h.validate.Struct(req); errs != nil {
+		var ve validator.ValidationErrors
+		if errors.As(errs, &ve) {
+			ValidationError(w, ve)
+			return
+		}
+	}
+
+	u, err := h.svc.Register(r.Context(), req.Name, req.Email, req.Password)
+	if err != nil {
+		h.handleError(w, err)
+		return
+	}
+
+	JSON(w, http.StatusCreated, userResponse{
+		ID:        u.ID,
+		Name:      u.Name,
+		Email:     u.Email,
+		CreatedAt: u.CreatedAt.Format("2006-01-02T15:04:05Z"),
+	})
+}
+
+// Login godoc
+// @Summary Login do casal
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param body body loginRequest true "Credenciais"
+// @Success 200 {object} loginResponse
+// @Failure 401 {object} errorEnvelope
+// @Router /v1/auth/login [post]
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var req loginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		Error(w, http.StatusBadRequest, "bad_request", "invalid JSON body")
+		return
+	}
+
+	if errs := h.validate.Struct(req); errs != nil {
+		var ve validator.ValidationErrors
+		if errors.As(errs, &ve) {
+			ValidationError(w, ve)
+			return
+		}
+	}
+
+	result, err := h.svc.Login(r.Context(), req.Email, req.Password)
+	if err != nil {
+		h.handleError(w, err)
+		return
+	}
+
+	JSON(w, http.StatusOK, loginResponse{
+		AccessToken:  result.AccessToken,
+		RefreshToken: result.RefreshToken,
+		ExpiresAt:    result.ExpiresAt.Format("2006-01-02T15:04:05Z"),
+	})
+}
+
+// Refresh godoc
+// @Summary Renovar access token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param body body refreshRequest true "Refresh token"
+// @Success 200 {object} refreshResponse
+// @Failure 401 {object} errorEnvelope
+// @Router /v1/auth/refresh [post]
+func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var req refreshRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		Error(w, http.StatusBadRequest, "bad_request", "invalid JSON body")
+		return
+	}
+
+	if errs := h.validate.Struct(req); errs != nil {
+		var ve validator.ValidationErrors
+		if errors.As(errs, &ve) {
+			ValidationError(w, ve)
+			return
+		}
+	}
+
+	result, err := h.svc.RefreshToken(r.Context(), req.RefreshToken)
+	if err != nil {
+		h.handleError(w, err)
+		return
+	}
+
+	JSON(w, http.StatusOK, refreshResponse{
+		AccessToken: result.AccessToken,
+		ExpiresAt:   result.ExpiresAt.Format("2006-01-02T15:04:05Z"),
+	})
+}
+
+// Logout godoc
+// @Summary Logout
+// @Tags auth
+// @Security BearerAuth
+// @Success 204
+// @Failure 401 {object} errorEnvelope
+// @Router /v1/auth/logout [post]
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		Error(w, http.StatusUnauthorized, "unauthorized", "authentication required")
+		return
+	}
+
+	if err := h.svc.Logout(r.Context(), userID); err != nil {
+		h.handleError(w, err)
+		return
+	}
+
+	NoContent(w)
+}
+
+func (h *AuthHandler) handleError(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, domain.ErrConflict):
+		Error(w, http.StatusConflict, "conflict", "email already registered")
+	case errors.Is(err, domain.ErrUnauthorized):
+		Error(w, http.StatusUnauthorized, "unauthorized", "invalid credentials")
+	case errors.Is(err, domain.ErrValidation):
+		Error(w, http.StatusUnprocessableEntity, "validation_error", err.Error())
+	default:
+		Error(w, http.StatusInternalServerError, "internal_error", "internal server error")
+	}
+}

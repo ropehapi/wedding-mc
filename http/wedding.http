@@ -1,0 +1,190 @@
+### Variáveis globais
+@baseUrl = http://localhost:8080
+@token = COLE_O_ACCESS_TOKEN_AQUI
+@photoId = COLE_O_PHOTO_ID_AQUI
+
+
+### --- Perfil do Casamento ---
+
+### 1. Criar casamento
+# Fluxo mínimo: bride_name, groom_name, date, location.
+# O slug é gerado automaticamente (ex: "ana-e-joao").
+# Retorna 409 se já existe um casamento para essa conta.
+POST {{baseUrl}}/v1/wedding
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "bride_name": "Ana",
+  "groom_name": "João",
+  "date": "2025-12-20",
+  "location": "Buffet Royal"
+}
+
+
+### 1b. Criar casamento completo (com campos opcionais e links)
+POST {{baseUrl}}/v1/wedding
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "bride_name": "Ana",
+  "groom_name": "João",
+  "date": "2025-12-20",
+  "time": "18:00",
+  "location": "Buffet Royal",
+  "city": "São Paulo",
+  "state": "SP",
+  "description": "Nossa história começou em 2020...",
+  "links": [
+    { "label": "Buffet Royal", "url": "https://buffetroyal.com.br" },
+    { "label": "Fotógrafo", "url": "https://instagram.com/foto" }
+  ]
+}
+
+
+### 2. Consultar casamento
+# Retorna o perfil completo com fotos e links.
+# Retorna 404 se o casal ainda não criou o casamento.
+GET {{baseUrl}}/v1/wedding
+Authorization: Bearer {{token}}
+
+
+### 3. Editar casamento (parcial)
+# Envie apenas os campos que deseja alterar.
+# Links omitidos = mantém existentes.
+# Links com [] = limpa todos os links.
+PATCH {{baseUrl}}/v1/wedding
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "location": "Chácara das Flores"
+}
+
+
+### 3b. Editar com múltiplos campos
+PATCH {{baseUrl}}/v1/wedding
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "bride_name": "Ana Paula",
+  "groom_name": "João Pedro",
+  "date": "2026-01-10",
+  "time": "20:00",
+  "location": "Espaço Nobre",
+  "city": "Campinas",
+  "state": "SP",
+  "description": "Uma celebração inesquecível"
+}
+
+
+### 3c. Substituir links
+PATCH {{baseUrl}}/v1/wedding
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "links": [
+    { "label": "Site do casamento", "url": "https://meusite.com" },
+    { "label": "Lista de presentes", "url": "https://amazon.com.br/lista" }
+  ]
+}
+
+
+### 3d. Limpar todos os links
+PATCH {{baseUrl}}/v1/wedding
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "links": []
+}
+
+
+### --- Fotos ---
+
+### 4. Upload de foto
+# Envie via multipart/form-data com campo "photo".
+# Formatos aceitos: .jpg, .jpeg, .png, .webp (máx 10MB).
+# Use curl ou ferramentas que suportem multipart para este endpoint:
+#
+#   curl -X POST http://localhost:8080/v1/wedding/photos \
+#     -H "Authorization: Bearer SEU_TOKEN" \
+#     -F "photo=@/caminho/para/foto.jpg"
+#
+# O VS Code REST Client não suporta upload de arquivo local nativo.
+# Veja wedding-upload.http para a requisição multipart.
+POST {{baseUrl}}/v1/wedding/photos
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="photo"; filename="test.jpg"
+Content-Type: image/jpeg
+
+< ./test-photo.jpg
+--boundary--
+
+
+### 5. Remover foto
+# Substitua @photoId pelo ID retornado no upload.
+DELETE {{baseUrl}}/v1/wedding/photos/{{photoId}}
+Authorization: Bearer {{token}}
+
+
+### --- Cenários de erro ---
+
+### Criar sem autenticação → 401
+POST {{baseUrl}}/v1/wedding
+Content-Type: application/json
+
+{
+  "bride_name": "Ana",
+  "groom_name": "João",
+  "date": "2025-12-20",
+  "location": "Local"
+}
+
+
+### Criar sem campos obrigatórios → 422
+POST {{baseUrl}}/v1/wedding
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "bride_name": "Ana"
+}
+
+
+### Criar com data inválida → 422
+POST {{baseUrl}}/v1/wedding
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "bride_name": "Ana",
+  "groom_name": "João",
+  "date": "20/12/2025",
+  "location": "Local"
+}
+
+
+### Criar casamento duplicado → 409
+# Rode após já ter criado o casamento na mesma conta.
+POST {{baseUrl}}/v1/wedding
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "bride_name": "Ana",
+  "groom_name": "João",
+  "date": "2025-12-20",
+  "location": "Outro local"
+}
+
+
+### Remover foto inexistente → 404
+DELETE {{baseUrl}}/v1/wedding/photos/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}

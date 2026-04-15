@@ -1,0 +1,78 @@
+### Variáveis globais
+@baseUrl = http://localhost:8080
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkYWYzZTNhZS1iM2M2LTRiZTYtOGVlYy0wNTAzNTNkNzRiODUiLCJleHAiOjE3NzYyMjA5NjYsImlhdCI6MTc3NjIxNzM2Nn0.V6okMSFWHVbksUJ72lnU5orXLUJZ9BN4JPeHvXAFlBw
+
+
+### 1. Registrar casal
+# Cria uma nova conta. Retorna o usuário criado (201).
+# Rode isso primeiro para criar sua conta.
+POST {{baseUrl}}/v1/auth/register
+Content-Type: application/json
+
+{
+  "name": "Ana e João",
+  "email": "ana@email.com",
+  "password": "senha123"
+}
+
+
+### 2. Login
+# Autentica e retorna access_token + refresh_token.
+# Copie o access_token e cole na variável @token acima.
+POST {{baseUrl}}/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "ana@email.com",
+  "password": "senha123"
+}
+
+
+### 3. Renovar access token
+# Use o refresh_token retornado no login quando o access_token expirar.
+POST {{baseUrl}}/v1/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "UBdR3bzl-VYpIYde_l_wciL_a9muAiiH9X4dKDYX3to"
+}
+
+
+### 4. Logout
+# Invalida todos os refresh tokens do usuário autenticado.
+POST {{baseUrl}}/v1/auth/logout
+Authorization: Bearer {{token}}
+
+
+### --- Cenários de erro ---
+
+### Registro com e-mail duplicado → 409
+POST {{baseUrl}}/v1/auth/register
+Content-Type: application/json
+
+{
+  "name": "Outro",
+  "email": "ana@email.com",
+  "password": "senha123"
+}
+
+
+### Registro com senha fraca → 422
+POST {{baseUrl}}/v1/auth/register
+Content-Type: application/json
+
+{
+  "name": "Teste",
+  "email": "fraca@email.com",
+  "password": "123"
+}
+
+
+### Login com senha errada → 401
+POST {{baseUrl}}/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "ana@email.com",
+  "password": "errada"
+}

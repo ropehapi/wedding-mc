@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS guests;
+DROP TYPE IF EXISTS rsvp_status;

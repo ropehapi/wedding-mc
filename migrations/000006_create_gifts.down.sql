@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS gifts;
+DROP TYPE IF EXISTS gift_status;

@@ -139,14 +139,14 @@ Cada casal precisa configurar o perfil do seu casamento — informações do eve
 
 ## Requirement Traceability
 
-| Requirement ID | Story                      | Status  |
-|----------------|----------------------------|---------|
-| WED-01         | P1: Criar perfil           | Pending |
-| WED-02         | P1: Editar perfil          | Pending |
-| WED-03         | P1: Consultar perfil       | Pending |
-| WED-04         | P1: Upload de fotos        | Pending |
-| WED-05         | P2: Remover foto           | Pending |
-| WED-06         | P2: Gerenciar links        | Pending |
+| Requirement ID | Story                      | Status   |
+|----------------|----------------------------|----------|
+| WED-01         | P1: Criar perfil           | Done     |
+| WED-02         | P1: Editar perfil          | Done     |
+| WED-03         | P1: Consultar perfil       | Done     |
+| WED-04         | P1: Upload de fotos        | Done     |
+| WED-05         | P2: Remover foto           | Done     |
+| WED-06         | P2: Gerenciar links        | Done     |
 
 ---
 

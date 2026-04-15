@@ -1,6 +1,6 @@
 # State — wedding-mc
 
-**Última atualização:** 2026-04-13
+**Última atualização:** 2026-04-14
 
 ---
 

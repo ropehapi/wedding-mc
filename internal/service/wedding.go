@@ -50,6 +50,7 @@ type UpdateWeddingRequest struct {
 type WeddingService interface {
 	CreateWedding(ctx context.Context, userID string, req CreateWeddingRequest) (*domain.Wedding, error)
 	GetWedding(ctx context.Context, userID string) (*domain.Wedding, error)
+	GetWeddingBySlug(ctx context.Context, slug string) (*domain.Wedding, error)
 	UpdateWedding(ctx context.Context, userID string, req UpdateWeddingRequest) (*domain.Wedding, error)
 	UploadPhoto(ctx context.Context, userID, filename string, r io.Reader, size int64) (*domain.WeddingPhoto, error)
 	DeletePhoto(ctx context.Context, userID, photoID string) error
@@ -102,6 +103,10 @@ func (s *weddingService) CreateWedding(ctx context.Context, userID string, req C
 
 func (s *weddingService) GetWedding(ctx context.Context, userID string) (*domain.Wedding, error) {
 	return s.weddings.FindByUserID(ctx, userID)
+}
+
+func (s *weddingService) GetWeddingBySlug(ctx context.Context, slug string) (*domain.Wedding, error) {
+	return s.weddings.FindBySlug(ctx, slug)
 }
 
 func (s *weddingService) UpdateWedding(ctx context.Context, userID string, req UpdateWeddingRequest) (*domain.Wedding, error) {

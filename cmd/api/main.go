@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
@@ -41,17 +45,25 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	tokenRepo := repository.NewRefreshTokenRepository(db)
 	weddingRepo := repository.NewWeddingRepository(db)
+	guestRepo := repository.NewGuestRepository(db)
+	giftRepo := repository.NewGiftRepository(db)
 
 	// --- Services ---
 	authSvc := service.NewAuthService(userRepo, tokenRepo, cfg.JWTSecret, cfg.JWTExpiry, cfg.RefreshExpiry)
 
 	baseURL := fmt.Sprintf("http://localhost:%s/uploads", cfg.Port)
 	storageSvc := service.NewLocalStorage(cfg.LocalStoragePath, baseURL)
+
 	weddingSvc := service.NewWeddingService(weddingRepo, storageSvc)
+	guestSvc := service.NewGuestService(guestRepo, weddingRepo)
+	giftSvc := service.NewGiftService(giftRepo, weddingRepo)
 
 	// --- Handlers ---
 	authHandler := handler.NewAuthHandler(authSvc)
 	weddingHandler := handler.NewWeddingHandler(weddingSvc)
+	guestHandler := handler.NewGuestHandler(guestSvc)
+	giftHandler := handler.NewGiftHandler(giftSvc)
+	publicHandler := handler.NewPublicHandler(weddingSvc, guestSvc, giftSvc)
 
 	// --- Router ---
 	r := chi.NewRouter()
@@ -65,6 +77,10 @@ func main() {
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: true,
 	}))
+
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		handler.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	})
 
 	r.Route("/v1", func(r chi.Router) {
 		// Auth — public
@@ -84,6 +100,36 @@ func main() {
 			r.Post("/photos", weddingHandler.UploadPhoto)
 			r.Delete("/photos/{photoID}", weddingHandler.DeletePhoto)
 		})
+
+		// Guests — protected
+		r.Route("/guests", func(r chi.Router) {
+			r.Use(middleware.Auth(cfg.JWTSecret))
+			r.Post("/", guestHandler.Create)
+			r.Get("/", guestHandler.List)
+			r.Get("/summary", guestHandler.Summary)
+			r.Patch("/{guestID}", guestHandler.Update)
+			r.Delete("/{guestID}", guestHandler.Delete)
+		})
+
+		// Gifts — protected
+		r.Route("/gifts", func(r chi.Router) {
+			r.Use(middleware.Auth(cfg.JWTSecret))
+			r.Post("/", giftHandler.Create)
+			r.Get("/", giftHandler.List)
+			r.Get("/summary", giftHandler.Summary)
+			r.Patch("/{giftID}", giftHandler.Update)
+			r.Delete("/{giftID}", giftHandler.Delete)
+			r.Delete("/{giftID}/reserve", giftHandler.CancelReserve)
+		})
+
+		// Public — no auth
+		r.Route("/public", func(r chi.Router) {
+			r.Get("/{slug}", publicHandler.GetWedding)
+			r.Get("/{slug}/guests", publicHandler.ListGuests)
+			r.Post("/{slug}/guests/{guestID}/rsvp", publicHandler.RSVP)
+			r.Get("/{slug}/gifts", publicHandler.ListGifts)
+			r.Post("/{slug}/gifts/{giftID}/reserve", publicHandler.ReserveGift)
+		})
 	})
 
 	// Serve uploaded files (local storage only)
@@ -92,9 +138,30 @@ func main() {
 			http.FileServer(http.Dir(cfg.LocalStoragePath))))
 	}
 
-	addr := ":" + cfg.Port
-	log.Info().Str("addr", addr).Msg("server starting")
-	if err := http.ListenAndServe(addr, r); err != nil {
-		log.Fatal().Err(err).Msg("server error")
+	srv := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: r,
 	}
+
+	// Graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+
+	go func() {
+		log.Info().Str("addr", srv.Addr).Msg("server starting")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal().Err(err).Msg("server error")
+		}
+	}()
+
+	<-quit
+	log.Info().Msg("shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Error().Err(err).Msg("server forced to shutdown")
+	}
+	log.Info().Msg("server stopped")
 }

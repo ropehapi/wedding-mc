@@ -1,0 +1,64 @@
+meta {
+  name: Logout
+  type: http
+  seq: 2
+  tags: [
+    auth
+  ]
+}
+
+post {
+  url: {{baseUrl}}/v1/auth/logout
+  body: none
+  auth: inherit
+}
+
+example {
+  name: 204 Response
+  description: No Content
+  
+  request: {
+    url: {{baseUrl}}/v1/auth/logout
+    method: POST
+    mode: none
+  }
+  
+  response: {
+    status: {
+      code: 204
+      text: No Content
+    }
+  
+    body: {
+      type: text
+      content: '''
+  
+      '''
+    }
+  }
+}
+
+example {
+  name: 401 Response
+  description: Unauthorized
+  
+  request: {
+    url: {{baseUrl}}/v1/auth/logout
+    method: POST
+    mode: none
+  }
+  
+  response: {
+    status: {
+      code: 401
+      text: Unauthorized
+    }
+  
+    body: {
+      type: text
+      content: '''
+  
+      '''
+    }
+  }
+}

@@ -1,0 +1,130 @@
+meta {
+  name: Atualizar convidado
+  type: http
+  seq: 4
+  tags: [
+    guests
+  ]
+}
+
+patch {
+  url: {{baseUrl}}/v1/guests/:guestID
+  body: none
+  auth: inherit
+}
+
+params:path {
+  guestID: 
+}
+
+example {
+  name: 200 Response
+  description: OK
+  
+  request: {
+    url: {{baseUrl}}/v1/guests/:guestID
+    method: PATCH
+    mode: none
+    params:path: {
+      guestID: 
+    }
+  }
+  
+  response: {
+    status: {
+      code: 200
+      text: OK
+    }
+  
+    body: {
+      type: text
+      content: '''
+  
+      '''
+    }
+  }
+}
+
+example {
+  name: 401 Response
+  description: Unauthorized
+  
+  request: {
+    url: {{baseUrl}}/v1/guests/:guestID
+    method: PATCH
+    mode: none
+    params:path: {
+      guestID: 
+    }
+  }
+  
+  response: {
+    status: {
+      code: 401
+      text: Unauthorized
+    }
+  
+    body: {
+      type: text
+      content: '''
+  
+      '''
+    }
+  }
+}
+
+example {
+  name: 404 Response
+  description: Not Found
+  
+  request: {
+    url: {{baseUrl}}/v1/guests/:guestID
+    method: PATCH
+    mode: none
+    params:path: {
+      guestID: 
+    }
+  }
+  
+  response: {
+    status: {
+      code: 404
+      text: Not Found
+    }
+  
+    body: {
+      type: text
+      content: '''
+  
+      '''
+    }
+  }
+}
+
+example {
+  name: 422 Response
+  description: Unprocessable Entity
+  
+  request: {
+    url: {{baseUrl}}/v1/guests/:guestID
+    method: PATCH
+    mode: none
+    params:path: {
+      guestID: 
+    }
+  }
+  
+  response: {
+    status: {
+      code: 422
+      text: Unprocessable Entity
+    }
+  
+    body: {
+      type: text
+      content: '''
+  
+      '''
+    }
+  }
+}

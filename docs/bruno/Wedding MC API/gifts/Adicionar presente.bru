@@ -1,0 +1,128 @@
+meta {
+  name: Adicionar presente
+  type: http
+  seq: 2
+  tags: [
+    gifts
+  ]
+}
+
+post {
+  url: {{baseUrl}}/v1/gifts
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "description": "Pra botar pra quebrar",
+    "image_url": "https://m.media-amazon.com/images/G/32/apparel/rcxgs/tile._CB483369971_.gif",
+    "name": "Caixa de som",
+    "price": 2200,
+    "store_url": "https://www.amazon.com.br/JBL-PartyBox-Bluetooth-Port%C3%A1til-reprodu%C3%A7%C3%A3o/dp/B0FJBJH87N/ref=asc_df_B0FJBJH87N?mcid=c0f9b8f9cb303c0c938aef788b7dc8e4&tag=googleshopp00-20&linkCode=df0&hvadid=709964503124&hvpos=&hvnetw=g&hvrand=17168106283258351253&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9102169&hvtargid=pla-2440680249043&psc=1&hvocijid=17168106283258351253-B0FJBJH87N-&hvexpln=0&language=pt_BR"
+  }
+}
+
+example {
+  name: 201 Response
+  description: Created
+  
+  request: {
+    url: {{baseUrl}}/v1/gifts
+    method: POST
+    mode: none
+  }
+  
+  response: {
+    status: {
+      code: 201
+      text: Created
+    }
+  
+    body: {
+      type: text
+      content: '''
+  
+      '''
+    }
+  }
+}
+
+example {
+  name: 401 Response
+  description: Unauthorized
+  
+  request: {
+    url: {{baseUrl}}/v1/gifts
+    method: POST
+    mode: none
+  }
+  
+  response: {
+    status: {
+      code: 401
+      text: Unauthorized
+    }
+  
+    body: {
+      type: text
+      content: '''
+  
+      '''
+    }
+  }
+}
+
+example {
+  name: 404 Response
+  description: Not Found
+  
+  request: {
+    url: {{baseUrl}}/v1/gifts
+    method: POST
+    mode: none
+  }
+  
+  response: {
+    status: {
+      code: 404
+      text: Not Found
+    }
+  
+    body: {
+      type: text
+      content: '''
+  
+      '''
+    }
+  }
+}
+
+example {
+  name: 422 Response
+  description: Unprocessable Entity
+  
+  request: {
+    url: {{baseUrl}}/v1/gifts
+    method: POST
+    mode: none
+  }
+  
+  response: {
+    status: {
+      code: 422
+      text: Unprocessable Entity
+    }
+  
+    body: {
+      type: text
+      content: '''
+  
+      '''
+    }
+  }
+}

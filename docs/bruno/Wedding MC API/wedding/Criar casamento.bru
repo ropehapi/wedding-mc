@@ -1,0 +1,137 @@
+meta {
+  name: Criar casamento
+  type: http
+  seq: 3
+  tags: [
+    wedding
+  ]
+}
+
+post {
+  url: {{baseUrl}}/v1/wedding
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "bride_name": "Giovanna",
+    "city": "Rolândia",
+    "date": "2027-01-01",
+    "description": "string",
+    "groom_name": "Pedro",
+    "links": [
+      {
+        "label": "string",
+        "url": "https://google.com"
+      }
+    ],
+    "location": "string",
+    "state": "PR",
+    "time": "00:00:00"
+  }
+}
+
+example {
+  name: 201 Response
+  description: Created
+  
+  request: {
+    url: {{baseUrl}}/v1/wedding
+    method: POST
+    mode: none
+  }
+  
+  response: {
+    status: {
+      code: 201
+      text: Created
+    }
+  
+    body: {
+      type: text
+      content: '''
+  
+      '''
+    }
+  }
+}
+
+example {
+  name: 401 Response
+  description: Unauthorized
+  
+  request: {
+    url: {{baseUrl}}/v1/wedding
+    method: POST
+    mode: none
+  }
+  
+  response: {
+    status: {
+      code: 401
+      text: Unauthorized
+    }
+  
+    body: {
+      type: text
+      content: '''
+  
+      '''
+    }
+  }
+}
+
+example {
+  name: 409 Response
+  description: Conflict
+  
+  request: {
+    url: {{baseUrl}}/v1/wedding
+    method: POST
+    mode: none
+  }
+  
+  response: {
+    status: {
+      code: 409
+      text: Conflict
+    }
+  
+    body: {
+      type: text
+      content: '''
+  
+      '''
+    }
+  }
+}
+
+example {
+  name: 422 Response
+  description: Unprocessable Entity
+  
+  request: {
+    url: {{baseUrl}}/v1/wedding
+    method: POST
+    mode: none
+  }
+  
+  response: {
+    status: {
+      code: 422
+      text: Unprocessable Entity
+    }
+  
+    body: {
+      type: text
+      content: '''
+  
+      '''
+    }
+  }
+}

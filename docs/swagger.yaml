@@ -1,0 +1,1091 @@
+basePath: /
+definitions:
+  handler.createGiftRequest:
+    properties:
+      description:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      store_url:
+        type: string
+    required:
+    - name
+    type: object
+  handler.createGuestRequest:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  handler.createWeddingRequest:
+    properties:
+      bride_name:
+        type: string
+      city:
+        type: string
+      date:
+        description: '"2006-01-02"'
+        type: string
+      description:
+        type: string
+      groom_name:
+        type: string
+      links:
+        items:
+          $ref: '#/definitions/handler.linkRequest'
+        type: array
+      location:
+        type: string
+      state:
+        type: string
+      time:
+        type: string
+    required:
+    - bride_name
+    - date
+    - groom_name
+    - location
+    type: object
+  handler.errorEnvelope:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+    type: object
+  handler.giftResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      reserved_at:
+        type: string
+      reserved_by_name:
+        type: string
+      status:
+        type: string
+      store_url:
+        type: string
+      updated_at:
+        type: string
+      wedding_id:
+        type: string
+    type: object
+  handler.giftSummaryResponse:
+    properties:
+      available:
+        type: integer
+      reserved:
+        type: integer
+    type: object
+  handler.guestResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      rsvp_at:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+      wedding_id:
+        type: string
+    type: object
+  handler.guestSummaryResponse:
+    properties:
+      confirmed:
+        type: integer
+      declined:
+        type: integer
+      pending:
+        type: integer
+    type: object
+  handler.linkRequest:
+    properties:
+      label:
+        type: string
+      url:
+        type: string
+    required:
+    - label
+    - url
+    type: object
+  handler.linkResponse:
+    properties:
+      id:
+        type: string
+      label:
+        type: string
+      position:
+        type: integer
+      url:
+        type: string
+    type: object
+  handler.loginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  handler.loginResponse:
+    properties:
+      access_token:
+        type: string
+      expires_at:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  handler.patchGiftRequest:
+    properties:
+      description:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      store_url:
+        type: string
+    type: object
+  handler.patchWeddingRequest:
+    properties:
+      bride_name:
+        type: string
+      city:
+        type: string
+      date:
+        description: '"2006-01-02"'
+        type: string
+      description:
+        type: string
+      groom_name:
+        type: string
+      links:
+        description: nil = unchanged; [] = clear all
+        items:
+          $ref: '#/definitions/handler.linkRequest'
+        type: array
+      location:
+        type: string
+      state:
+        type: string
+      time:
+        type: string
+    type: object
+  handler.photoResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      url:
+        type: string
+    type: object
+  handler.publicGiftResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      reserved:
+        type: boolean
+      store_url:
+        type: string
+    type: object
+  handler.publicGuestResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      rsvp_at:
+        type: string
+      status:
+        type: string
+    type: object
+  handler.publicWeddingResponse:
+    properties:
+      bride_name:
+        type: string
+      city:
+        type: string
+      date:
+        type: string
+      description:
+        type: string
+      groom_name:
+        type: string
+      id:
+        type: string
+      links:
+        items:
+          $ref: '#/definitions/handler.linkResponse'
+        type: array
+      location:
+        type: string
+      photos:
+        items:
+          $ref: '#/definitions/handler.photoResponse'
+        type: array
+      slug:
+        type: string
+      state:
+        type: string
+      time:
+        type: string
+    type: object
+  handler.refreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  handler.refreshResponse:
+    properties:
+      access_token:
+        type: string
+      expires_at:
+        type: string
+    type: object
+  handler.registerRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  handler.reserveGiftRequest:
+    properties:
+      guest_name:
+        type: string
+    required:
+    - guest_name
+    type: object
+  handler.rsvpRequest:
+    properties:
+      status:
+        enum:
+        - confirmed
+        - declined
+        type: string
+    required:
+    - status
+    type: object
+  handler.userResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  handler.validationDetail:
+    properties:
+      field:
+        type: string
+      rule:
+        type: string
+    type: object
+  handler.validationEnvelope:
+    properties:
+      details:
+        items:
+          $ref: '#/definitions/handler.validationDetail'
+        type: array
+      error:
+        type: string
+    type: object
+  handler.weddingResponse:
+    properties:
+      bride_name:
+        type: string
+      city:
+        type: string
+      created_at:
+        type: string
+      date:
+        type: string
+      description:
+        type: string
+      groom_name:
+        type: string
+      id:
+        type: string
+      links:
+        items:
+          $ref: '#/definitions/handler.linkResponse'
+        type: array
+      location:
+        type: string
+      photos:
+        items:
+          $ref: '#/definitions/handler.photoResponse'
+        type: array
+      slug:
+        type: string
+      state:
+        type: string
+      time:
+        type: string
+      updated_at:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API para gestão de casamentos — convidados, presentes e página pública.
+  title: Wedding MC API
+  version: "1.0"
+paths:
+  /v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Credenciais
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.loginResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      summary: Login do casal
+      tags:
+      - auth
+  /v1/auth/logout:
+    post:
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Logout
+      tags:
+      - auth
+  /v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Refresh token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.refreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.refreshResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      summary: Renovar access token
+      tags:
+      - auth
+  /v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Dados do casal
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.userResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.validationEnvelope'
+      summary: Registrar casal
+      tags:
+      - auth
+  /v1/gifts:
+    get:
+      parameters:
+      - description: Filtro por status (available, reserved)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.giftResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Listar presentes
+      tags:
+      - gifts
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Dados do presente
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createGiftRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.giftResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.validationEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Adicionar presente
+      tags:
+      - gifts
+  /v1/gifts/{giftID}:
+    delete:
+      parameters:
+      - description: ID do presente
+        in: path
+        name: giftID
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Remover presente
+      tags:
+      - gifts
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID do presente
+        in: path
+        name: giftID
+        required: true
+        type: string
+      - description: Campos a atualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.patchGiftRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.giftResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Atualizar presente
+      tags:
+      - gifts
+  /v1/gifts/{giftID}/reserve:
+    delete:
+      parameters:
+      - description: ID do presente
+        in: path
+        name: giftID
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.giftResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Cancelar reserva de presente
+      tags:
+      - gifts
+  /v1/gifts/summary:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.giftSummaryResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Resumo de presentes por status
+      tags:
+      - gifts
+  /v1/guests:
+    get:
+      parameters:
+      - description: Filtro por status (pending, confirmed, declined)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.guestResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Listar convidados
+      tags:
+      - guests
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Dados do convidado
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createGuestRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.guestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.validationEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Adicionar convidado
+      tags:
+      - guests
+  /v1/guests/{guestID}:
+    delete:
+      parameters:
+      - description: ID do convidado
+        in: path
+        name: guestID
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Remover convidado
+      tags:
+      - guests
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID do convidado
+        in: path
+        name: guestID
+        required: true
+        type: string
+      - description: Campos a atualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createGuestRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.guestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.validationEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Atualizar convidado
+      tags:
+      - guests
+  /v1/guests/summary:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.guestSummaryResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Resumo de convidados por status
+      tags:
+      - guests
+  /v1/public/{slug}:
+    get:
+      parameters:
+      - description: Slug do casamento
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.publicWeddingResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      summary: Página pública do casamento
+      tags:
+      - public
+  /v1/public/{slug}/gifts:
+    get:
+      parameters:
+      - description: Slug do casamento
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.publicGiftResponse'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      summary: Lista pública de presentes
+      tags:
+      - public
+  /v1/public/{slug}/gifts/{giftID}/reserve:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Slug do casamento
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: ID do presente
+        in: path
+        name: giftID
+        required: true
+        type: string
+      - description: Nome do convidado
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.reserveGiftRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.validationEnvelope'
+      summary: Reservar presente
+      tags:
+      - public
+  /v1/public/{slug}/guests:
+    get:
+      parameters:
+      - description: Slug do casamento
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.publicGuestResponse'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      summary: Lista de convidados pública
+      tags:
+      - public
+  /v1/public/{slug}/guests/{guestID}/rsvp:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Slug do casamento
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: ID do convidado
+        in: path
+        name: guestID
+        required: true
+        type: string
+      - description: Status RSVP
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.rsvpRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.publicGuestResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.validationEnvelope'
+      summary: Confirmar/recusar presença
+      tags:
+      - public
+  /v1/wedding:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.weddingResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Consultar casamento
+      tags:
+      - wedding
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Campos a atualizar
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.patchWeddingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.weddingResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.validationEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Editar casamento
+      tags:
+      - wedding
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Dados do casamento
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createWeddingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.weddingResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.validationEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Criar casamento
+      tags:
+      - wedding
+  /v1/wedding/photos:
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Arquivo de imagem (JPEG, PNG, WebP, max 10MB)
+        in: formData
+        name: photo
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.photoResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Upload de foto
+      tags:
+      - wedding
+  /v1/wedding/photos/{photoID}:
+    delete:
+      parameters:
+      - description: ID da foto
+        in: path
+        name: photoID
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Remover foto
+      tags:
+      - wedding
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

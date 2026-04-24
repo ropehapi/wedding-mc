@@ -1,3 +1,13 @@
+// @title          Wedding MC API
+// @version        1.0
+// @description    API para gestão de casamentos — convidados, presentes e página pública.
+// @host           localhost:8080
+// @BasePath       /
+//
+// @securityDefinitions.apikey BearerAuth
+// @in             header
+// @name           Authorization
+
 package main
 
 import (
@@ -14,8 +24,10 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	httpSwagger "github.com/swaggo/http-swagger"
 
 	"github.com/ropehapi/wedding-mc/internal/config"
+	_ "github.com/ropehapi/wedding-mc/docs"
 	"github.com/ropehapi/wedding-mc/internal/handler"
 	"github.com/ropehapi/wedding-mc/internal/middleware"
 	"github.com/ropehapi/wedding-mc/internal/repository"
@@ -81,6 +93,7 @@ func main() {
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		handler.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
+	r.Get("/swagger/*", httpSwagger.Handler())
 
 	r.Route("/v1", func(r chi.Router) {
 		// Auth — public

@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
+	"github.com/rs/zerolog/log"
 	"github.com/ropehapi/wedding-mc/internal/domain"
 	"github.com/ropehapi/wedding-mc/internal/middleware"
 	"github.com/ropehapi/wedding-mc/internal/service"
@@ -81,7 +82,7 @@ func (h *GuestHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	guest, err := h.svc.CreateGuest(r.Context(), userID, req.Name)
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -113,7 +114,7 @@ func (h *GuestHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	guests, err := h.svc.ListGuests(r.Context(), userID, statusFilter)
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -142,7 +143,7 @@ func (h *GuestHandler) Summary(w http.ResponseWriter, r *http.Request) {
 
 	counts, err := h.svc.GetSummary(r.Context(), userID)
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -190,7 +191,7 @@ func (h *GuestHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	guest, err := h.svc.UpdateGuest(r.Context(), userID, guestID, req.Name)
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -216,14 +217,14 @@ func (h *GuestHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	guestID := chi.URLParam(r, "guestID")
 
 	if err := h.svc.DeleteGuest(r.Context(), userID, guestID); err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
 	NoContent(w)
 }
 
-func (h *GuestHandler) handleError(w http.ResponseWriter, err error) {
+func (h *GuestHandler) handleError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, domain.ErrNotFound):
 		Error(w, http.StatusNotFound, "not_found", "resource not found")
@@ -234,6 +235,7 @@ func (h *GuestHandler) handleError(w http.ResponseWriter, err error) {
 	case errors.Is(err, domain.ErrValidation):
 		Error(w, http.StatusUnprocessableEntity, "validation_error", err.Error())
 	default:
+		log.Error().Err(err).Str("request_id", middleware.RequestIDFromContext(r.Context())).Msg("unhandled guest error")
 		Error(w, http.StatusInternalServerError, "internal_error", "internal server error")
 	}
 }

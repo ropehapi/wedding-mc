@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/rs/zerolog/log"
 	"github.com/ropehapi/wedding-mc/internal/domain"
 	"github.com/ropehapi/wedding-mc/internal/middleware"
 	"github.com/ropehapi/wedding-mc/internal/service"
@@ -95,7 +96,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	u, err := h.svc.Register(r.Context(), req.Name, req.Email, req.Password)
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -133,7 +134,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.svc.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -170,7 +171,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.svc.RefreshToken(r.Context(), req.RefreshToken)
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -195,14 +196,14 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.svc.Logout(r.Context(), userID); err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
 	NoContent(w)
 }
 
-func (h *AuthHandler) handleError(w http.ResponseWriter, err error) {
+func (h *AuthHandler) handleError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, domain.ErrConflict):
 		Error(w, http.StatusConflict, "conflict", "email already registered")
@@ -211,6 +212,7 @@ func (h *AuthHandler) handleError(w http.ResponseWriter, err error) {
 	case errors.Is(err, domain.ErrValidation):
 		Error(w, http.StatusUnprocessableEntity, "validation_error", err.Error())
 	default:
+		log.Error().Err(err).Str("request_id", middleware.RequestIDFromContext(r.Context())).Msg("unhandled auth error")
 		Error(w, http.StatusInternalServerError, "internal_error", "internal server error")
 	}
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
+	"github.com/rs/zerolog/log"
 	"github.com/ropehapi/wedding-mc/internal/domain"
 	"github.com/ropehapi/wedding-mc/internal/middleware"
 	"github.com/ropehapi/wedding-mc/internal/service"
@@ -103,7 +104,7 @@ func (h *GiftHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Price:       req.Price,
 	})
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -135,7 +136,7 @@ func (h *GiftHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	gifts, err := h.svc.ListGifts(r.Context(), userID, statusFilter)
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -164,7 +165,7 @@ func (h *GiftHandler) Summary(w http.ResponseWriter, r *http.Request) {
 
 	counts, err := h.svc.GetSummary(r.Context(), userID)
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -209,7 +210,7 @@ func (h *GiftHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Price:       req.Price,
 	})
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -235,7 +236,7 @@ func (h *GiftHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	giftID := chi.URLParam(r, "giftID")
 
 	if err := h.svc.DeleteGift(r.Context(), userID, giftID); err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -262,14 +263,14 @@ func (h *GiftHandler) CancelReserve(w http.ResponseWriter, r *http.Request) {
 
 	gift, err := h.svc.CancelReserve(r.Context(), userID, giftID)
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
 	JSON(w, http.StatusOK, toGiftResponse(gift))
 }
 
-func (h *GiftHandler) handleError(w http.ResponseWriter, err error) {
+func (h *GiftHandler) handleError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, domain.ErrNotFound):
 		Error(w, http.StatusNotFound, "not_found", "resource not found")
@@ -280,6 +281,7 @@ func (h *GiftHandler) handleError(w http.ResponseWriter, err error) {
 	case errors.Is(err, domain.ErrValidation):
 		Error(w, http.StatusUnprocessableEntity, "validation_error", err.Error())
 	default:
+		log.Error().Err(err).Str("request_id", middleware.RequestIDFromContext(r.Context())).Msg("unhandled gift error")
 		Error(w, http.StatusInternalServerError, "internal_error", "internal server error")
 	}
 }

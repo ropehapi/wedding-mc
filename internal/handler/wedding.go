@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
+	"github.com/rs/zerolog/log"
 	"github.com/ropehapi/wedding-mc/internal/domain"
 	"github.com/ropehapi/wedding-mc/internal/middleware"
 	"github.com/ropehapi/wedding-mc/internal/service"
@@ -117,7 +118,7 @@ func (h *WeddingHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 	wedding, err := h.svc.GetWedding(r.Context(), userID)
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -185,7 +186,7 @@ func (h *WeddingHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Links:       links,
 	})
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -255,7 +256,7 @@ func (h *WeddingHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	wedding, err := h.svc.UpdateWedding(r.Context(), userID, svcReq)
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -294,7 +295,7 @@ func (h *WeddingHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 
 	photo, err := h.svc.UploadPhoto(r.Context(), userID, header.Filename, file, header.Size)
 	if err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
@@ -328,14 +329,14 @@ func (h *WeddingHandler) DeletePhoto(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.svc.DeletePhoto(r.Context(), userID, photoID); err != nil {
-		h.handleError(w, err)
+		h.handleError(w, r, err)
 		return
 	}
 
 	NoContent(w)
 }
 
-func (h *WeddingHandler) handleError(w http.ResponseWriter, err error) {
+func (h *WeddingHandler) handleError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, domain.ErrNotFound):
 		Error(w, http.StatusNotFound, "not_found", "wedding not found")
@@ -346,6 +347,7 @@ func (h *WeddingHandler) handleError(w http.ResponseWriter, err error) {
 	case errors.Is(err, domain.ErrValidation):
 		Error(w, http.StatusUnprocessableEntity, "validation_error", err.Error())
 	default:
+		log.Error().Err(err).Str("request_id", middleware.RequestIDFromContext(r.Context())).Msg("unhandled wedding error")
 		Error(w, http.StatusInternalServerError, "internal_error", "internal server error")
 	}
 }

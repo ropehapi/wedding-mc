@@ -14,13 +14,14 @@ const (
 )
 
 type Guest struct {
-	ID        string     `db:"id" json:"id"`
-	WeddingID string     `db:"wedding_id" json:"wedding_id"`
-	Name      string     `db:"name" json:"name"`
-	Status    RSVPStatus `db:"status" json:"status"`
-	RSVPAt    *time.Time `db:"rsvp_at" json:"rsvp_at,omitempty"`
-	CreatedAt time.Time  `db:"created_at" json:"created_at"`
-	UpdatedAt time.Time  `db:"updated_at" json:"updated_at"`
+	ID         string     `db:"id" json:"id"`
+	WeddingID  string     `db:"wedding_id" json:"wedding_id"`
+	Name       string     `db:"name" json:"name"`
+	Status     RSVPStatus `db:"status" json:"status"`
+	AccessCode string     `db:"access_code" json:"access_code,omitempty"`
+	RSVPAt     *time.Time `db:"rsvp_at" json:"rsvp_at,omitempty"`
+	CreatedAt  time.Time  `db:"created_at" json:"created_at"`
+	UpdatedAt  time.Time  `db:"updated_at" json:"updated_at"`
 }
 
 type GuestRepository interface {

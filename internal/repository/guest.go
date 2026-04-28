@@ -2,12 +2,20 @@ package repository
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
 	"errors"
+	"fmt"
+	"math/big"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/ropehapi/wedding-mc/internal/domain"
 )
+
+func generateAccessCode() string {
+	n, _ := rand.Int(rand.Reader, big.NewInt(1_000_000))
+	return fmt.Sprintf("%06d", n.Int64())
+}
 
 type guestRepo struct {
 	db *sqlx.DB
@@ -18,11 +26,12 @@ func NewGuestRepository(db *sqlx.DB) domain.GuestRepository {
 }
 
 func (r *guestRepo) Create(ctx context.Context, g *domain.Guest) error {
+	g.AccessCode = generateAccessCode()
 	query := `
-		INSERT INTO guests (wedding_id, name, status)
-		VALUES ($1, $2, $3)
+		INSERT INTO guests (wedding_id, name, status, access_code)
+		VALUES ($1, $2, $3, $4)
 		RETURNING id, created_at, updated_at`
-	return r.db.QueryRowContext(ctx, query, g.WeddingID, g.Name, g.Status).
+	return r.db.QueryRowContext(ctx, query, g.WeddingID, g.Name, g.Status, g.AccessCode).
 		Scan(&g.ID, &g.CreatedAt, &g.UpdatedAt)
 }
 

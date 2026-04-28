@@ -103,12 +103,12 @@ func TestCreateGuest_WeddingNotFound(t *testing.T) {
 
 func TestRSVP_Confirmed(t *testing.T) {
 	w := baseWedding()
-	guest := &domain.Guest{ID: "g-1", WeddingID: w.ID, Status: domain.RSVPPending}
+	guest := &domain.Guest{ID: "g-1", WeddingID: w.ID, Status: domain.RSVPPending, AccessCode: "123456"}
 	weddings := &mockWeddingRepo{findBySlugResults: map[string]*domain.Wedding{w.Slug: w}}
 	guests := &mockGuestRepo{findByIDResult: guest}
 	svc := newTestGuestService(guests, weddings)
 
-	updated, err := svc.RSVP(context.Background(), w.Slug, guest.ID, domain.RSVPConfirmed)
+	updated, err := svc.RSVP(context.Background(), w.Slug, guest.ID, "123456", domain.RSVPConfirmed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -122,12 +122,12 @@ func TestRSVP_Confirmed(t *testing.T) {
 
 func TestRSVP_Declined(t *testing.T) {
 	w := baseWedding()
-	guest := &domain.Guest{ID: "g-1", WeddingID: w.ID, Status: domain.RSVPPending}
+	guest := &domain.Guest{ID: "g-1", WeddingID: w.ID, Status: domain.RSVPPending, AccessCode: "123456"}
 	weddings := &mockWeddingRepo{findBySlugResults: map[string]*domain.Wedding{w.Slug: w}}
 	guests := &mockGuestRepo{findByIDResult: guest}
 	svc := newTestGuestService(guests, weddings)
 
-	updated, err := svc.RSVP(context.Background(), w.Slug, guest.ID, domain.RSVPDeclined)
+	updated, err := svc.RSVP(context.Background(), w.Slug, guest.ID, "123456", domain.RSVPDeclined)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -139,7 +139,7 @@ func TestRSVP_Declined(t *testing.T) {
 func TestRSVP_InvalidStatus(t *testing.T) {
 	svc := newTestGuestService(&mockGuestRepo{}, &mockWeddingRepo{})
 
-	_, err := svc.RSVP(context.Background(), "slug", "guest-1", domain.RSVPStatus("maybe"))
+	_, err := svc.RSVP(context.Background(), "slug", "guest-1", "123456", domain.RSVPStatus("maybe"))
 	if !errors.Is(err, domain.ErrValidation) {
 		t.Errorf("expected ErrValidation, got %v", err)
 	}
@@ -148,7 +148,7 @@ func TestRSVP_InvalidStatus(t *testing.T) {
 func TestRSVP_PendingStatusRejected(t *testing.T) {
 	svc := newTestGuestService(&mockGuestRepo{}, &mockWeddingRepo{})
 
-	_, err := svc.RSVP(context.Background(), "slug", "guest-1", domain.RSVPPending)
+	_, err := svc.RSVP(context.Background(), "slug", "guest-1", "123456", domain.RSVPPending)
 	if !errors.Is(err, domain.ErrValidation) {
 		t.Errorf("expected ErrValidation for 'pending' status, got %v", err)
 	}
@@ -156,14 +156,27 @@ func TestRSVP_PendingStatusRejected(t *testing.T) {
 
 func TestRSVP_GuestFromAnotherWedding(t *testing.T) {
 	w := baseWedding()
-	guest := &domain.Guest{ID: "g-1", WeddingID: "other-wedding-id"}
+	guest := &domain.Guest{ID: "g-1", WeddingID: "other-wedding-id", AccessCode: "123456"}
 	weddings := &mockWeddingRepo{findBySlugResults: map[string]*domain.Wedding{w.Slug: w}}
 	guests := &mockGuestRepo{findByIDResult: guest}
 	svc := newTestGuestService(guests, weddings)
 
-	_, err := svc.RSVP(context.Background(), w.Slug, guest.ID, domain.RSVPConfirmed)
+	_, err := svc.RSVP(context.Background(), w.Slug, guest.ID, "123456", domain.RSVPConfirmed)
 	if !errors.Is(err, domain.ErrNotFound) {
 		t.Errorf("expected ErrNotFound, got %v", err)
+	}
+}
+
+func TestRSVP_WrongAccessCode(t *testing.T) {
+	w := baseWedding()
+	guest := &domain.Guest{ID: "g-1", WeddingID: w.ID, Status: domain.RSVPPending, AccessCode: "123456"}
+	weddings := &mockWeddingRepo{findBySlugResults: map[string]*domain.Wedding{w.Slug: w}}
+	guests := &mockGuestRepo{findByIDResult: guest}
+	svc := newTestGuestService(guests, weddings)
+
+	_, err := svc.RSVP(context.Background(), w.Slug, guest.ID, "000000", domain.RSVPConfirmed)
+	if !errors.Is(err, domain.ErrForbidden) {
+		t.Errorf("expected ErrForbidden, got %v", err)
 	}
 }
 
@@ -171,7 +184,7 @@ func TestRSVP_SlugNotFound(t *testing.T) {
 	weddings := &mockWeddingRepo{}
 	svc := newTestGuestService(&mockGuestRepo{}, weddings)
 
-	_, err := svc.RSVP(context.Background(), "unknown-slug", "g-1", domain.RSVPConfirmed)
+	_, err := svc.RSVP(context.Background(), "unknown-slug", "g-1", "123456", domain.RSVPConfirmed)
 	if !errors.Is(err, domain.ErrNotFound) {
 		t.Errorf("expected ErrNotFound, got %v", err)
 	}
@@ -269,12 +282,12 @@ func TestDeleteGuest_GuestFromAnotherWedding(t *testing.T) {
 func TestRSVP_SetsTimestamp(t *testing.T) {
 	w := baseWedding()
 	before := time.Now()
-	guest := &domain.Guest{ID: "g-1", WeddingID: w.ID}
+	guest := &domain.Guest{ID: "g-1", WeddingID: w.ID, AccessCode: "123456"}
 	weddings := &mockWeddingRepo{findBySlugResults: map[string]*domain.Wedding{w.Slug: w}}
 	guests := &mockGuestRepo{findByIDResult: guest}
 	svc := newTestGuestService(guests, weddings)
 
-	updated, err := svc.RSVP(context.Background(), w.Slug, "g-1", domain.RSVPConfirmed)
+	updated, err := svc.RSVP(context.Background(), w.Slug, "g-1", "123456", domain.RSVPConfirmed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

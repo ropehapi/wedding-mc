@@ -15,7 +15,8 @@ type GuestService interface {
 	ListGuestsByWeddingID(ctx context.Context, weddingID string, status *domain.RSVPStatus) ([]domain.Guest, error)
 	UpdateGuest(ctx context.Context, userID, guestID, name string) (*domain.Guest, error)
 	DeleteGuest(ctx context.Context, userID, guestID string) error
-	RSVP(ctx context.Context, slug, guestID string, status domain.RSVPStatus) (*domain.Guest, error)
+	RSVP(ctx context.Context, slug, guestID, accessCode string, status domain.RSVPStatus) (*domain.Guest, error)
+	ValidateGuestCode(ctx context.Context, slug, guestID, accessCode string) (*domain.Guest, error)
 	GetSummary(ctx context.Context, userID string) (map[domain.RSVPStatus]int, error)
 }
 
@@ -96,7 +97,7 @@ func (s *guestService) DeleteGuest(ctx context.Context, userID, guestID string) 
 }
 
 // RSVP updates a guest's attendance status via the public slug endpoint.
-func (s *guestService) RSVP(ctx context.Context, slug, guestID string, status domain.RSVPStatus) (*domain.Guest, error) {
+func (s *guestService) RSVP(ctx context.Context, slug, guestID, accessCode string, status domain.RSVPStatus) (*domain.Guest, error) {
 	if status != domain.RSVPConfirmed && status != domain.RSVPDeclined {
 		return nil, fmt.Errorf("%w: status must be 'confirmed' or 'declined'", domain.ErrValidation)
 	}
@@ -113,12 +114,35 @@ func (s *guestService) RSVP(ctx context.Context, slug, guestID string, status do
 	if g.WeddingID != w.ID {
 		return nil, domain.ErrNotFound
 	}
+	if g.AccessCode != accessCode {
+		return nil, domain.ErrForbidden
+	}
 
 	now := time.Now()
 	g.Status = status
 	g.RSVPAt = &now
 	if err := s.guests.Update(ctx, g); err != nil {
 		return nil, err
+	}
+	return g, nil
+}
+
+// ValidateGuestCode finds the guest and validates its access code.
+func (s *guestService) ValidateGuestCode(ctx context.Context, slug, guestID, accessCode string) (*domain.Guest, error) {
+	w, err := s.weddings.FindBySlug(ctx, slug)
+	if err != nil {
+		return nil, err
+	}
+
+	g, err := s.guests.FindByID(ctx, guestID)
+	if err != nil {
+		return nil, err
+	}
+	if g.WeddingID != w.ID {
+		return nil, domain.ErrNotFound
+	}
+	if g.AccessCode != accessCode {
+		return nil, domain.ErrForbidden
 	}
 	return g, nil
 }

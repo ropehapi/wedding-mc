@@ -31,13 +31,14 @@ type createGuestRequest struct {
 }
 
 type guestResponse struct {
-	ID        string     `json:"id"`
-	WeddingID string     `json:"wedding_id"`
-	Name      string     `json:"name"`
-	Status    string     `json:"status"`
-	RSVPAt    *time.Time `json:"rsvp_at,omitempty"`
-	CreatedAt string     `json:"created_at"`
-	UpdatedAt string     `json:"updated_at"`
+	ID         string     `json:"id"`
+	WeddingID  string     `json:"wedding_id"`
+	Name       string     `json:"name"`
+	Status     string     `json:"status"`
+	AccessCode string     `json:"access_code"`
+	RSVPAt     *time.Time `json:"rsvp_at,omitempty"`
+	CreatedAt  string     `json:"created_at"`
+	UpdatedAt  string     `json:"updated_at"`
 }
 
 type guestSummaryResponse struct {
@@ -242,12 +243,13 @@ func (h *GuestHandler) handleError(w http.ResponseWriter, r *http.Request, err e
 
 func toGuestResponse(g *domain.Guest) guestResponse {
 	return guestResponse{
-		ID:        g.ID,
-		WeddingID: g.WeddingID,
-		Name:      g.Name,
-		Status:    string(g.Status),
-		RSVPAt:    g.RSVPAt,
-		CreatedAt: g.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: g.UpdatedAt.Format(time.RFC3339),
+		ID:         g.ID,
+		WeddingID:  g.WeddingID,
+		Name:       g.Name,
+		Status:     string(g.Status),
+		AccessCode: g.AccessCode,
+		RSVPAt:     g.RSVPAt,
+		CreatedAt:  g.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:  g.UpdatedAt.Format(time.RFC3339),
 	}
 }

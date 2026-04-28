@@ -20,7 +20,8 @@ type publicWeddingServicer interface {
 // publicGuestServicer is the subset of GuestService used by PublicHandler.
 type publicGuestServicer interface {
 	ListGuestsByWeddingID(ctx context.Context, weddingID string, status *domain.RSVPStatus) ([]domain.Guest, error)
-	RSVP(ctx context.Context, slug, guestID string, status domain.RSVPStatus) (*domain.Guest, error)
+	RSVP(ctx context.Context, slug, guestID, accessCode string, status domain.RSVPStatus) (*domain.Guest, error)
+	ValidateGuestCode(ctx context.Context, slug, guestID, accessCode string) (*domain.Guest, error)
 }
 
 // publicGiftServicer is the subset of GiftService used by PublicHandler.
@@ -84,11 +85,13 @@ type publicGiftResponse struct {
 // --- Request types ---
 
 type rsvpRequest struct {
-	Status string `json:"status" validate:"required,oneof=confirmed declined"`
+	Status     string `json:"status" validate:"required,oneof=confirmed declined"`
+	AccessCode string `json:"access_code" validate:"required,len=6"`
 }
 
 type reserveGiftRequest struct {
-	GuestName string `json:"guest_name" validate:"required"`
+	GuestID    string `json:"guest_id" validate:"required"`
+	AccessCode string `json:"access_code" validate:"required,len=6"`
 }
 
 // --- Handlers ---
@@ -177,7 +180,7 @@ func (h *PublicHandler) RSVP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	guest, err := h.guests.RSVP(r.Context(), slug, guestID, domain.RSVPStatus(req.Status))
+	guest, err := h.guests.RSVP(r.Context(), slug, guestID, req.AccessCode, domain.RSVPStatus(req.Status))
 	if err != nil {
 		h.handleError(w, err)
 		return
@@ -259,7 +262,13 @@ func (h *PublicHandler) ReserveGift(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := h.gifts.ReserveGift(r.Context(), slug, giftID, req.GuestName); err != nil {
+	guest, err := h.guests.ValidateGuestCode(r.Context(), slug, req.GuestID, req.AccessCode)
+	if err != nil {
+		h.handleError(w, err)
+		return
+	}
+
+	if err := h.gifts.ReserveGift(r.Context(), slug, giftID, guest.Name); err != nil {
 		h.handleError(w, err)
 		return
 	}
@@ -273,6 +282,8 @@ func (h *PublicHandler) handleError(w http.ResponseWriter, err error) {
 		Error(w, http.StatusNotFound, "not_found", "resource not found")
 	case errors.Is(err, domain.ErrConflict):
 		Error(w, http.StatusConflict, "conflict", "gift already reserved")
+	case errors.Is(err, domain.ErrForbidden):
+		Error(w, http.StatusForbidden, "forbidden", "access denied")
 	case errors.Is(err, domain.ErrValidation):
 		Error(w, http.StatusUnprocessableEntity, "validation_error", err.Error())
 	default:

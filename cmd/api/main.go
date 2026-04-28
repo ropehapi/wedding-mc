@@ -140,6 +140,7 @@ func main() {
 		r.Route("/public", func(r chi.Router) {
 			r.Get("/{slug}", publicHandler.GetWedding)
 			r.Get("/{slug}/guests", publicHandler.ListGuests)
+			r.Post("/{slug}/guests/validate-code", publicHandler.ValidateCode)
 			r.Post("/{slug}/guests/{guestID}/rsvp", publicHandler.RSVP)
 			r.Get("/{slug}/gifts", publicHandler.ListGifts)
 			r.Post("/{slug}/gifts/{giftID}/reserve", publicHandler.ReserveGift)

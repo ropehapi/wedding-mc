@@ -28,6 +28,7 @@ type GuestRepository interface {
 	Create(ctx context.Context, g *Guest) error
 	FindAll(ctx context.Context, weddingID string, status *RSVPStatus) ([]Guest, error)
 	FindByID(ctx context.Context, id string) (*Guest, error)
+	FindByAccessCode(ctx context.Context, weddingID, accessCode string) (*Guest, error)
 	Update(ctx context.Context, g *Guest) error
 	Delete(ctx context.Context, id string) error
 	CountByStatus(ctx context.Context, weddingID string) (map[RSVPStatus]int, error)

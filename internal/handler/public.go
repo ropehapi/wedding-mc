@@ -22,6 +22,7 @@ type publicGuestServicer interface {
 	ListGuestsByWeddingID(ctx context.Context, weddingID string, status *domain.RSVPStatus) ([]domain.Guest, error)
 	RSVP(ctx context.Context, slug, guestID, accessCode string, status domain.RSVPStatus) (*domain.Guest, error)
 	ValidateGuestCode(ctx context.Context, slug, guestID, accessCode string) (*domain.Guest, error)
+	LookupGuestByCode(ctx context.Context, slug, accessCode string) (*domain.Guest, error)
 }
 
 // publicGiftServicer is the subset of GiftService used by PublicHandler.
@@ -91,6 +92,10 @@ type rsvpRequest struct {
 
 type reserveGiftRequest struct {
 	GuestID    string `json:"guest_id" validate:"required"`
+	AccessCode string `json:"access_code" validate:"required,len=6"`
+}
+
+type validateCodeRequest struct {
 	AccessCode string `json:"access_code" validate:"required,len=6"`
 }
 
@@ -181,6 +186,47 @@ func (h *PublicHandler) RSVP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	guest, err := h.guests.RSVP(r.Context(), slug, guestID, req.AccessCode, domain.RSVPStatus(req.Status))
+	if err != nil {
+		h.handleError(w, err)
+		return
+	}
+
+	JSON(w, http.StatusOK, publicGuestResponse{
+		ID:     guest.ID,
+		Name:   guest.Name,
+		Status: string(guest.Status),
+		RSVPAt: guest.RSVPAt,
+	})
+}
+
+// ValidateCode godoc
+// @Summary Valida o código de acesso de um convidado
+// @Tags public
+// @Accept json
+// @Produce json
+// @Param slug path string true "Slug do casamento"
+// @Param body body validateCodeRequest true "Código de acesso"
+// @Success 200 {object} publicGuestResponse
+// @Failure 403 {object} errorEnvelope
+// @Failure 404 {object} errorEnvelope
+// @Router /v1/public/{slug}/guests/validate-code [post]
+func (h *PublicHandler) ValidateCode(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+
+	var req validateCodeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		Error(w, http.StatusBadRequest, "bad_request", "invalid JSON body")
+		return
+	}
+	if errs := h.validate.Struct(req); errs != nil {
+		var ve validator.ValidationErrors
+		if errors.As(errs, &ve) {
+			ValidationError(w, ve)
+			return
+		}
+	}
+
+	guest, err := h.guests.LookupGuestByCode(r.Context(), slug, req.AccessCode)
 	if err != nil {
 		h.handleError(w, err)
 		return

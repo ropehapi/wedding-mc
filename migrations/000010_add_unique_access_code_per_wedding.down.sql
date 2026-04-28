@@ -1,0 +1,1 @@
+ALTER TABLE guests DROP CONSTRAINT guests_wedding_id_access_code_unique;

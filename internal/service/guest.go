@@ -17,6 +17,7 @@ type GuestService interface {
 	DeleteGuest(ctx context.Context, userID, guestID string) error
 	RSVP(ctx context.Context, slug, guestID, accessCode string, status domain.RSVPStatus) (*domain.Guest, error)
 	ValidateGuestCode(ctx context.Context, slug, guestID, accessCode string) (*domain.Guest, error)
+	LookupGuestByCode(ctx context.Context, slug, accessCode string) (*domain.Guest, error)
 	GetSummary(ctx context.Context, userID string) (map[domain.RSVPStatus]int, error)
 }
 
@@ -143,6 +144,19 @@ func (s *guestService) ValidateGuestCode(ctx context.Context, slug, guestID, acc
 	}
 	if g.AccessCode != accessCode {
 		return nil, domain.ErrForbidden
+	}
+	return g, nil
+}
+
+// LookupGuestByCode finds a guest by access code within a wedding, without requiring a known guest ID.
+func (s *guestService) LookupGuestByCode(ctx context.Context, slug, accessCode string) (*domain.Guest, error) {
+	w, err := s.weddings.FindBySlug(ctx, slug)
+	if err != nil {
+		return nil, err
+	}
+	g, err := s.guests.FindByAccessCode(ctx, w.ID, accessCode)
+	if err != nil {
+		return nil, err
 	}
 	return g, nil
 }

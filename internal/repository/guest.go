@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/lib/pq"
 	"github.com/jmoiron/sqlx"
 	"github.com/ropehapi/wedding-mc/internal/domain"
 )
@@ -26,13 +27,24 @@ func NewGuestRepository(db *sqlx.DB) domain.GuestRepository {
 }
 
 func (r *guestRepo) Create(ctx context.Context, g *domain.Guest) error {
-	g.AccessCode = generateAccessCode()
 	query := `
 		INSERT INTO guests (wedding_id, name, status, access_code)
 		VALUES ($1, $2, $3, $4)
 		RETURNING id, created_at, updated_at`
-	return r.db.QueryRowContext(ctx, query, g.WeddingID, g.Name, g.Status, g.AccessCode).
-		Scan(&g.ID, &g.CreatedAt, &g.UpdatedAt)
+	for range 10 {
+		g.AccessCode = generateAccessCode()
+		err := r.db.QueryRowContext(ctx, query, g.WeddingID, g.Name, g.Status, g.AccessCode).
+			Scan(&g.ID, &g.CreatedAt, &g.UpdatedAt)
+		if err == nil {
+			return nil
+		}
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+			continue
+		}
+		return err
+	}
+	return fmt.Errorf("failed to generate unique access code after retries")
 }
 
 func (r *guestRepo) FindAll(ctx context.Context, weddingID string, status *domain.RSVPStatus) ([]domain.Guest, error) {
@@ -54,6 +66,21 @@ func (r *guestRepo) FindAll(ctx context.Context, weddingID string, status *domai
 func (r *guestRepo) FindByID(ctx context.Context, id string) (*domain.Guest, error) {
 	var g domain.Guest
 	err := r.db.GetContext(ctx, &g, `SELECT * FROM guests WHERE id = $1`, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, domain.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &g, nil
+}
+
+func (r *guestRepo) FindByAccessCode(ctx context.Context, weddingID, accessCode string) (*domain.Guest, error) {
+	var g domain.Guest
+	err := r.db.GetContext(ctx, &g,
+		`SELECT * FROM guests WHERE wedding_id = $1 AND access_code = $2`,
+		weddingID, accessCode,
+	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, domain.ErrNotFound
 	}

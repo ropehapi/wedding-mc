@@ -286,6 +286,7 @@ func toPublicWeddingResponse(w *domain.Wedding) publicWeddingResponse {
 		photos[i] = photoResponse{
 			ID:        p.ID,
 			URL:       p.URL,
+			IsCover:   p.IsCover,
 			CreatedAt: p.CreatedAt.Format(time.RFC3339),
 		}
 	}

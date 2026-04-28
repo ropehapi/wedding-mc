@@ -23,6 +23,7 @@ type weddingServicer interface {
 	UpdateWedding(ctx context.Context, userID string, req service.UpdateWeddingRequest) (*domain.Wedding, error)
 	UploadPhoto(ctx context.Context, userID, filename string, r io.Reader, size int64) (*domain.WeddingPhoto, error)
 	DeletePhoto(ctx context.Context, userID, photoID string) error
+	SetCoverPhoto(ctx context.Context, userID, photoID string) error
 }
 
 // WeddingHandler handles HTTP requests for wedding endpoints.
@@ -71,6 +72,7 @@ type patchWeddingRequest struct {
 type photoResponse struct {
 	ID        string `json:"id"`
 	URL       string `json:"url"`
+	IsCover   bool   `json:"is_cover"`
 	CreatedAt string `json:"created_at"`
 }
 
@@ -302,6 +304,7 @@ func (h *WeddingHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	JSON(w, http.StatusCreated, photoResponse{
 		ID:        photo.ID,
 		URL:       photo.URL,
+		IsCover:   photo.IsCover,
 		CreatedAt: photo.CreatedAt.Format(time.RFC3339),
 	})
 }
@@ -336,6 +339,36 @@ func (h *WeddingHandler) DeletePhoto(w http.ResponseWriter, r *http.Request) {
 	NoContent(w)
 }
 
+// SetCoverPhoto godoc
+// @Summary Definir foto principal
+// @Tags wedding
+// @Security BearerAuth
+// @Param photoID path string true "ID da foto"
+// @Success 204
+// @Failure 401 {object} errorEnvelope
+// @Failure 404 {object} errorEnvelope
+// @Router /v1/wedding/photos/{photoID}/cover [patch]
+func (h *WeddingHandler) SetCoverPhoto(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		Error(w, http.StatusUnauthorized, "unauthorized", "authentication required")
+		return
+	}
+
+	photoID := chi.URLParam(r, "photoID")
+	if photoID == "" {
+		Error(w, http.StatusBadRequest, "bad_request", "photoID is required")
+		return
+	}
+
+	if err := h.svc.SetCoverPhoto(r.Context(), userID, photoID); err != nil {
+		h.handleError(w, r, err)
+		return
+	}
+
+	NoContent(w)
+}
+
 func (h *WeddingHandler) handleError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, domain.ErrNotFound):
@@ -360,6 +393,7 @@ func toWeddingResponse(w *domain.Wedding) weddingResponse {
 		photos[i] = photoResponse{
 			ID:        p.ID,
 			URL:       p.URL,
+			IsCover:   p.IsCover,
 			CreatedAt: p.CreatedAt.Format(time.RFC3339),
 		}
 	}

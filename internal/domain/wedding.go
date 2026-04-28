@@ -29,6 +29,7 @@ type WeddingPhoto struct {
 	WeddingID  string    `db:"wedding_id" json:"wedding_id"`
 	URL        string    `db:"url" json:"url"`
 	StorageKey string    `db:"storage_key" json:"-"`
+	IsCover    bool      `db:"is_cover" json:"is_cover"`
 	CreatedAt  time.Time `db:"created_at" json:"created_at"`
 }
 
@@ -49,5 +50,6 @@ type WeddingRepository interface {
 	AddPhoto(ctx context.Context, p *WeddingPhoto) error
 	DeletePhoto(ctx context.Context, photoID string) (*WeddingPhoto, error)
 	FindPhotoByID(ctx context.Context, photoID string) (*WeddingPhoto, error)
+	SetCoverPhoto(ctx context.Context, photoID, weddingID string) error
 	ReplaceLinks(ctx context.Context, weddingID string, links []WeddingLink) error
 }

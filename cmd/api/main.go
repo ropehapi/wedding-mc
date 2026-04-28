@@ -112,6 +112,7 @@ func main() {
 			r.Patch("/", weddingHandler.Update)
 			r.Post("/photos", weddingHandler.UploadPhoto)
 			r.Delete("/photos/{photoID}", weddingHandler.DeletePhoto)
+			r.Patch("/photos/{photoID}/cover", weddingHandler.SetCoverPhoto)
 		})
 
 		// Guests — protected

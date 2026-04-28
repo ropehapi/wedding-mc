@@ -33,6 +33,8 @@ type mockWeddingService struct {
 	uploadErr    error
 
 	deletePhotoErr error
+
+	setCoverPhotoErr error
 }
 
 func (m *mockWeddingService) CreateWedding(_ context.Context, _ string, _ service.CreateWeddingRequest) (*domain.Wedding, error) {
@@ -49,6 +51,9 @@ func (m *mockWeddingService) UploadPhoto(_ context.Context, _, _ string, _ io.Re
 }
 func (m *mockWeddingService) DeletePhoto(_ context.Context, _, _ string) error {
 	return m.deletePhotoErr
+}
+func (m *mockWeddingService) SetCoverPhoto(_ context.Context, _, _ string) error {
+	return m.setCoverPhotoErr
 }
 
 // helpers

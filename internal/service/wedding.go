@@ -54,6 +54,7 @@ type WeddingService interface {
 	UpdateWedding(ctx context.Context, userID string, req UpdateWeddingRequest) (*domain.Wedding, error)
 	UploadPhoto(ctx context.Context, userID, filename string, r io.Reader, size int64) (*domain.WeddingPhoto, error)
 	DeletePhoto(ctx context.Context, userID, photoID string) error
+	SetCoverPhoto(ctx context.Context, userID, photoID string) error
 }
 
 type weddingService struct {
@@ -212,6 +213,23 @@ func (s *weddingService) DeletePhoto(ctx context.Context, userID, photoID string
 	}
 
 	return nil
+}
+
+func (s *weddingService) SetCoverPhoto(ctx context.Context, userID, photoID string) error {
+	w, err := s.weddings.FindByUserID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	photo, err := s.weddings.FindPhotoByID(ctx, photoID)
+	if err != nil {
+		return err
+	}
+	if photo.WeddingID != w.ID {
+		return domain.ErrNotFound
+	}
+
+	return s.weddings.SetCoverPhoto(ctx, photoID, w.ID)
 }
 
 // uniqueSlug generates a URL-safe slug from bride and groom names and ensures

@@ -30,6 +30,8 @@ type mockWeddingRepo struct {
 	deletePhotoResult *domain.WeddingPhoto
 	deletePhotoErr    error
 
+	setCoverPhotoErr error
+
 	replaceLinksErr error
 	replacedLinks   []domain.WeddingLink
 }
@@ -84,6 +86,10 @@ func (m *mockWeddingRepo) FindPhotoByID(_ context.Context, _ string) (*domain.We
 
 func (m *mockWeddingRepo) DeletePhoto(_ context.Context, _ string) (*domain.WeddingPhoto, error) {
 	return m.deletePhotoResult, m.deletePhotoErr
+}
+
+func (m *mockWeddingRepo) SetCoverPhoto(_ context.Context, _, _ string) error {
+	return m.setCoverPhotoErr
 }
 
 func (m *mockWeddingRepo) ReplaceLinks(_ context.Context, _ string, links []domain.WeddingLink) error {

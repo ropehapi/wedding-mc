@@ -130,6 +130,36 @@ func (r *weddingRepo) DeletePhoto(ctx context.Context, photoID string) (*domain.
 	return &p, nil
 }
 
+func (r *weddingRepo) SetCoverPhoto(ctx context.Context, photoID, weddingID string) error {
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() //nolint:errcheck
+
+	if _, err := tx.ExecContext(ctx,
+		`UPDATE wedding_photos SET is_cover = FALSE WHERE wedding_id = $1`, weddingID,
+	); err != nil {
+		return err
+	}
+
+	res, err := tx.ExecContext(ctx,
+		`UPDATE wedding_photos SET is_cover = TRUE WHERE id = $1 AND wedding_id = $2`, photoID, weddingID,
+	)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return domain.ErrNotFound
+	}
+
+	return tx.Commit()
+}
+
 func (r *weddingRepo) ReplaceLinks(ctx context.Context, weddingID string, links []domain.WeddingLink) error {
 	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
